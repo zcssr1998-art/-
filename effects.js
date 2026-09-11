@@ -1,0 +1,4 @@
+(()=>{
+const G=window.EVO,oldDraw=G.Snake.prototype.draw;
+G.Snake.prototype.draw=function(){oldDraw.call(this);if(this.dead||!this.buffs?.length)return;const X=G.ctx,p=G.screen(this.x,this.y),z=G.camera.z,r=this.radius*z;X.save();X.textAlign='center';X.textBaseline='middle';const n=Math.min(this.buffs.length,9);for(let i=0;i<n;i++){const b=this.buffs[i],ring=Math.floor(i/5),slot=i%5,count=Math.min(5,n-ring*5),a=G.time*(ring?-.72:.86)+slot*G.TAU/Math.max(1,count),rr=r+45+ring*18;const x=p.x+Math.cos(a)*rr,y=p.y+Math.sin(a)*rr,sz=Math.max(9,11*z);X.globalAlpha=.8;X.fillStyle='#10183dcc';X.shadowColor='#7fe8ff';X.shadowBlur=9;X.beginPath();X.arc(x,y,sz*.86,0,G.TAU);X.fill();X.shadowBlur=0;X.strokeStyle='#b9f9ff55';X.lineWidth=1;X.stroke();X.globalAlpha=1;X.font=`${sz}px system-ui`;X.fillText(b[0],x,y+1)}X.restore()};
+})();
