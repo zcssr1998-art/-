@@ -31,7 +31,7 @@ class Snake{
   const grid=G.spatial,heads=grid?grid.headsNear(this.x,this.y,620):G.snakes.filter(s=>!s.dead),body=grid?grid.bodiesNear(this.x,this.y,175):[];
   let sepX=0,sepY=0,avoidX=0,avoidY=0,nearestThreat=null,nearestThreatD=1e9,nearCount=0;
   for(const o of heads){if(o===this||o.dead)continue;const dx=this.x-o.x,dy=this.y-o.y,d=Math.hypot(dx,dy)||1;if(d<190)nearCount++;if(d<115){const q=(115-d)/115;sepX+=dx/d*q*140;sepY+=dy/d*q*140}const toward=Math.abs(angleDiff(o.a,Math.atan2(this.y-o.y,this.x-o.x)))<.72;if((toward&&d<270)||d<105){if(d<nearestThreatD){nearestThreat=o;nearestThreatD=d}}}
-  for(const rec of body){if(rec.s===this||rec.s.dead)continue;const dx=this.x-rec.p.x,dy=this.y-rec.p.y,d=Math.hypot(dx,dy)||1;if(d<150){const q=(150-d)/150;avoidX+=dx/d*q*260;avoidY+=dy/d*q*260}}
+  for(const p of body){const owner=p.owner;if(!owner||owner===this||owner.dead)continue;const dx=this.x-p.x,dy=this.y-p.y,d=Math.hypot(dx,dy)||1;if(d<150){const q=(150-d)/150;avoidX+=dx/d*q*260;avoidY+=dy/d*q*260}}
   this.think-=dt;
   if(this.think<=0||G.time>=this.stateUntil||this.target?.dead){
    const farFromPlayer=G.player&&Math.hypot(this.x-G.player.x,this.y-G.player.y)>G.SIM.mid;
@@ -70,7 +70,7 @@ class Snake{
   const heads=G.spatial?G.spatial.headsNear(this.x,this.y,70):G.snakes;
   for(const other of heads){if(other===this||other.dead||other.inv>0)continue;const hd=Math.hypot(this.x-other.x,this.y-other.y);if(hd<(this.radius+other.radius)*.72){this.die(other);other.die(this);return}}
   const bodies=G.spatial?G.spatial.bodiesNear(this.x,this.y,72):null;
-  if(bodies){for(const rec of bodies){const other=rec.s;if(other===this||other.dead||other.inv>0)continue;if(Math.hypot(this.x-rec.p.x,this.y-rec.p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}
+  if(bodies){for(const p of bodies){const other=p.owner;if(!other||other===this||other.dead||other.inv>0)continue;if(Math.hypot(this.x-p.x,this.y-p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}
   else for(const other of G.snakes){if(other===this||other.dead||other.inv>0)continue;for(let i=6;i<other.body.length;i+=2){const p=other.body[i];if(Math.hypot(this.x-p.x,this.y-p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}
  }
  die(killer){
