@@ -1,0 +1,5 @@
+(()=>{
+const G=window.EVO;let A=null;
+G.audioInit=()=>{if(!A){const C=window.AudioContext||window.webkitAudioContext;if(C)A=new C()}if(A?.state==='suspended')A.resume()};
+G.sfx=(type='tap')=>{if(!A)return;const now=A.currentTime,master=A.createGain();master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.055,now+.01);master.gain.exponentialRampToValueAtTime(.0001,now+.28);master.connect(A.destination);const notes={tap:[420,.08],buff:[560,.16],evo:[440,.3],kill:[240,.18],death:[150,.3]};const [base,dur]=notes[type]||notes.tap;const count=type==='evo'?3:1;for(let i=0;i<count;i++){const o=A.createOscillator(),g=A.createGain();o.type=type==='death'?'sawtooth':'sine';o.frequency.setValueAtTime(base*(1+i*.26),now+i*.05);if(type==='kill')o.frequency.exponentialRampToValueAtTime(base*1.8,now+dur);if(type==='death')o.frequency.exponentialRampToValueAtTime(70,now+dur);g.gain.value=1/(count*1.4);o.connect(g);g.connect(master);o.start(now+i*.05);o.stop(now+dur+i*.05)}};
+})();
