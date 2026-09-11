@@ -5,14 +5,78 @@ class Food{
  draw(){const p=G.screen(this.x,this.y),r=this.r*G.camera.z;if(p.x<-20||p.x>G.vw+20||p.y<-20||p.y>G.vh+20)return;G.ctx.save();G.ctx.globalCompositeOperation='lighter';const g=G.ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.8);g.addColorStop(0,'#fff');g.addColorStop(.3,this.c);g.addColorStop(1,'transparent');G.ctx.fillStyle=g;G.ctx.beginPath();G.ctx.arc(p.x,p.y,r*2.8,0,G.TAU);G.ctx.fill();G.ctx.restore()}
 }
 class Snake{
- constructor({ai=false,name='小团子',score=80,x=rnd(300,G.WORLD.w-300),y=rnd(300,G.WORLD.h-300),palette=pick(G.palettes),style=pick(G.botStyles)}={}){Object.assign(this,{ai,name,score,x,y,palette,style,a:rnd(0,G.TAU),ta:0,dead:false,body:[],mag:28,speed:1,boost:1,turn:1,feast:1,orbiters:0,boostCost:1,buffs:[],inv:.8,think:0,target:null,boosting:false,kills:0,trail:0,fins:0,killBonus:0});this.ta=this.a;for(let i=0;i<36;i++)this.body.push({x:x-i*5.2,y})}
+ constructor({ai=false,name='小团子',score=80,x=rnd(300,G.WORLD.w-300),y=rnd(300,G.WORLD.h-300),palette=pick(G.palettes),style=pick(G.botStyles)}={}){
+  Object.assign(this,{ai,name,score,x,y,palette,style,a:rnd(0,G.TAU),ta:0,dead:false,body:[],mag:28,speed:1,boost:1,turn:1,feast:1,orbiters:0,boostCost:1,buffs:[],inv:.8,think:0,target:null,boosting:false,kills:0,trail:0,fins:0,killBonus:0,aiState:'wander',stateUntil:0,stuckClock:0,stuckX:x,stuckY:y,stuckLevel:0,escapeA:0,simAccum:0,seed:Math.random()*99});
+  this.ta=this.a;this.escapeA=this.a;for(let i=0;i<36;i++)this.body.push({x:x-i*5.2,y})
+ }
  get stage(){return G.stageFor(this)}get radius(){return this.stage[2]}get maxBody(){return 30+Math.floor(Math.sqrt(this.score)*2.55)}
- update(dt){if(this.dead)return;this.inv=Math.max(0,this.inv-dt);if(this.ai)this.brain(dt);const sizePenalty=1+Math.min(.28,Math.sqrt(this.score)/155);const turnRate=5.9*this.turn/sizePenalty;this.a+=clamp(angleDiff(this.a,this.ta),-turnRate*dt,turnRate*dt);const boosting=this.boosting&&this.score>55;const cruise=(138+Math.min(34,Math.sqrt(this.score)*.72))*this.speed;const v=cruise*(boosting?1.72*this.boost:1);this.x+=Math.cos(this.a)*v*dt;this.y+=Math.sin(this.a)*v*dt;if(this.x<45||this.x>G.WORLD.w-45||this.y<45||this.y>G.WORLD.h-45)this.ta=Math.atan2(G.WORLD.h/2-this.y,G.WORLD.w/2-this.x);this.x=clamp(this.x,10,G.WORLD.w-10);this.y=clamp(this.y,10,G.WORLD.h-10);const h=this.body[0];if(Math.hypot(this.x-h.x,this.y-h.y)>4.4)this.body.unshift({x:this.x,y:this.y});while(this.body.length>this.maxBody)this.body.pop();if(boosting)this.score=Math.max(50,this.score-dt*7.5*this.boostCost);this.eatFood();if(this.inv<=0)this.checkCollision()}
- brain(dt){this.think-=dt;if(this.think<=0){this.think=rnd(.22,.62);if(this.style==='猎手型'){const prey=G.snakes.filter(s=>s!==this&&!s.dead&&s.inv<=0).sort((a,b)=>Math.hypot(this.x-a.x,this.y-a.y)-Math.hypot(this.x-b.x,this.y-b.y))[0];this.target=prey&&Math.hypot(this.x-prey.x,this.y-prey.y)<620?prey:pick(G.foods);this.boosting=Math.random()<.16}else if(this.style==='游荡型'){this.target=Math.random()<.55?pick(G.foods):{x:rnd(180,G.WORLD.w-180),y:rnd(180,G.WORLD.h-180)};this.boosting=Math.random()<.09}else{this.target=pick(G.foods);this.boosting=Math.random()<.04}}
- let tx=this.target?.x||G.WORLD.w/2,ty=this.target?.y||G.WORLD.h/2,ax=0,ay=0;if(this.target instanceof Snake){tx+=Math.cos(this.target.a)*70;ty+=Math.sin(this.target.a)*70}for(const s of G.snakes){if(s===this||s.dead)continue;for(let i=7;i<s.body.length;i+=8){const q=s.body[i],dx=this.x-q.x,dy=this.y-q.y,d=Math.hypot(dx,dy);if(d<125){ax+=dx/(d*d+1)*7200;ay+=dy/(d*d+1)*7200}}}this.ta=Math.atan2(ty-this.y+ay,tx-this.x+ax)+rnd(-.035,.035)}
- eatFood(){const R=this.radius+this.mag;for(const f of G.foods){if(f.dead)continue;let dx=this.x-f.x,dy=this.y-f.y,d=Math.hypot(dx,dy);if(d<R&&d>3){const q=(1-d/R)*.16;f.x+=dx*q;f.y+=dy*q}if(d<this.radius+f.r+3){f.dead=true;this.score+=f.v*this.feast;G.burst(f.x,f.y,f.c,4)}}if(this.orbiters)for(let k=0;k<this.orbiters;k++){const a=G.time*1.8+k*G.TAU/this.orbiters,ox=this.x+Math.cos(a)*(this.radius+28),oy=this.y+Math.sin(a)*(this.radius+28);for(const f of G.foods)if(!f.dead&&Math.hypot(f.x-ox,f.y-oy)<17){f.dead=true;this.score+=f.v*this.feast*.8}}}
- checkCollision(){for(const other of G.snakes){if(other===this||other.dead||other.inv>0)continue;const hd=Math.hypot(this.x-other.x,this.y-other.y);if(hd<(this.radius+other.radius)*.72){this.die(other);other.die(this);return}for(let i=6;i<other.body.length;i+=2){const p=other.body[i];if(Math.hypot(this.x-p.x,this.y-p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}}
- die(killer){if(this.dead)return;this.dead=true;for(let i=0;i<this.body.length;i+=2){const p=this.body[i];G.foods.push(new Food(p.x+rnd(-5,5),p.y+rnd(-5,5),rnd(3,8),this.palette[i%2]))}G.burst(this.x,this.y,this.palette[0],18);if(killer&&killer!==this){killer.kills++;killer.score+=20+(killer.killBonus||0);G.onKill?.(killer,this)}if(this===G.player)setTimeout(G.gameOver,360)}
+ update(dt){
+  if(this.dead)return;this.inv=Math.max(0,this.inv-dt);if(this.ai)this.brain(dt);
+  const sizePenalty=1+Math.min(.28,Math.sqrt(this.score)/155),turnRate=5.9*this.turn/sizePenalty;
+  this.a+=clamp(angleDiff(this.a,this.ta),-turnRate*dt,turnRate*dt);
+  const boosting=this.boosting&&this.score>55,cruise=(138+Math.min(34,Math.sqrt(this.score)*.72))*this.speed,v=cruise*(boosting?1.72*this.boost:1);
+  this.x+=Math.cos(this.a)*v*dt;this.y+=Math.sin(this.a)*v*dt;
+  if(this.x<70||this.x>G.WORLD.w-70||this.y<70||this.y>G.WORLD.h-70)this.ta=Math.atan2(G.WORLD.h/2-this.y,G.WORLD.w/2-this.x);
+  this.x=clamp(this.x,10,G.WORLD.w-10);this.y=clamp(this.y,10,G.WORLD.h-10);
+  const h=this.body[0];if(Math.hypot(this.x-h.x,this.y-h.y)>4.4)this.body.unshift({x:this.x,y:this.y});while(this.body.length>this.maxBody)this.body.pop();
+  if(boosting)this.score=Math.max(50,this.score-dt*7.5*this.boostCost);this.eatFood();if(this.inv<=0)this.checkCollision();
+ }
+ brain(dt){
+  this.stuckClock+=dt;
+  if(this.stuckClock>=.78){
+   const moved=Math.hypot(this.x-this.stuckX,this.y-this.stuckY);this.stuckLevel=moved<48?this.stuckLevel+1:Math.max(0,this.stuckLevel-1);
+   this.stuckX=this.x;this.stuckY=this.y;this.stuckClock=0;
+   if(this.stuckLevel>=2){this.aiState='unstuck';this.stateUntil=G.time+1.15;this.escapeA=this.a+(Math.random()<.5?-1:1)*rnd(.85,1.55);this.stuckLevel=0}
+  }
+  const grid=G.spatial,heads=grid?grid.headsNear(this.x,this.y,620):G.snakes.filter(s=>!s.dead),body=grid?grid.bodiesNear(this.x,this.y,175):[];
+  let sepX=0,sepY=0,avoidX=0,avoidY=0,nearestThreat=null,nearestThreatD=1e9,nearCount=0;
+  for(const o of heads){if(o===this||o.dead)continue;const dx=this.x-o.x,dy=this.y-o.y,d=Math.hypot(dx,dy)||1;if(d<190)nearCount++;if(d<115){const q=(115-d)/115;sepX+=dx/d*q*140;sepY+=dy/d*q*140}const toward=Math.abs(angleDiff(o.a,Math.atan2(this.y-o.y,this.x-o.x)))<.72;if((toward&&d<270)||d<105){if(d<nearestThreatD){nearestThreat=o;nearestThreatD=d}}}
+  for(const rec of body){if(rec.s===this||rec.s.dead)continue;const dx=this.x-rec.p.x,dy=this.y-rec.p.y,d=Math.hypot(dx,dy)||1;if(d<150){const q=(150-d)/150;avoidX+=dx/d*q*260;avoidY+=dy/d*q*260}}
+  this.think-=dt;
+  if(this.think<=0||G.time>=this.stateUntil||this.target?.dead){
+   const farFromPlayer=G.player&&Math.hypot(this.x-G.player.x,this.y-G.player.y)>G.SIM.mid;
+   this.think=farFromPlayer?rnd(.65,1.25):rnd(.18,.42);
+   const foods=grid?grid.foodsNear(this.x,this.y,620):G.foods;
+   let nearestFood=null,fd=1e9;for(const f of foods){if(f.dead)continue;const d=(f.x-this.x)**2+(f.y-this.y)**2;if(d<fd){fd=d;nearestFood=f}}
+   let nearestSnake=null,sd=1e9;for(const o of heads){if(o===this||o.dead||o.inv>0)continue;const d=(o.x-this.x)**2+(o.y-this.y)**2;if(d<sd){sd=d;nearestSnake=o}}
+   const playerNear=G.player&&!G.player.dead&&G.player.inv<=0&&Math.hypot(this.x-G.player.x,this.y-G.player.y)<1150;
+   if(this.stuckLevel>=2){this.aiState='unstuck';this.escapeA=this.a+(Math.random()<.5?-1:1)*rnd(.9,1.6);this.stateUntil=G.time+1.1}
+   else if(nearCount>=7||nearestThreatD<120){this.aiState='flee';this.target=nearestThreat;this.stateUntil=G.time+rnd(.45,.85)}
+   else if(this.style==='谨慎型'&&nearestSnake&&Math.sqrt(sd)<360){this.aiState='flee';this.target=nearestSnake;this.stateUntil=G.time+rnd(.55,1)}
+   else if(this.style==='疯狗型'&&(playerNear||nearestSnake)){this.aiState='hunt';this.target=playerNear?G.player:nearestSnake;this.stateUntil=G.time+rnd(.7,1.25)}
+   else if(this.style==='猎手型'&&nearestSnake&&Math.random()<.78){this.aiState='hunt';this.target=playerNear&&Math.random()<.45?G.player:nearestSnake;this.stateUntil=G.time+rnd(.65,1.2)}
+   else if(this.style==='伏击型'&&nearestSnake&&Math.sqrt(sd)<720&&Math.random()<.68){this.aiState='hunt';this.target=nearestSnake;this.stateUntil=G.time+rnd(.75,1.35)}
+   else if(nearestFood&&(this.style==='觅食型'||this.style==='谨慎型'||Math.random()<.68)){this.aiState='forage';this.target=nearestFood;this.stateUntil=G.time+rnd(.55,1.15)}
+   else{this.aiState='wander';this.target={x:clamp(this.x+rnd(-850,850),120,G.WORLD.w-120),y:clamp(this.y+rnd(-850,850),120,G.WORLD.h-120)};this.stateUntil=G.time+rnd(.8,1.8)}
+  }
+  let tx=this.target?.x??G.WORLD.w/2,ty=this.target?.y??G.WORLD.h/2;
+  if(this.aiState==='unstuck'){tx=this.x+Math.cos(this.escapeA)*420;ty=this.y+Math.sin(this.escapeA)*420;this.boosting=true}
+  else if(this.aiState==='flee'){
+   const t=this.target;if(t){tx=this.x+(this.x-t.x)*2.2;ty=this.y+(this.y-t.y)*2.2}else{tx=this.x+sepX+avoidX;ty=this.y+sepY+avoidY}this.boosting=nearestThreatD<185
+  }else if(this.aiState==='hunt'&&this.target instanceof Snake){
+   const t=this.target,lead=this.style==='伏击型'?245:155,side=this.style==='疯狗型'?0:Math.sin(this.seed)*72;
+   tx=t.x+Math.cos(t.a)*lead+Math.cos(t.a+Math.PI/2)*side;ty=t.y+Math.sin(t.a)*lead+Math.sin(t.a+Math.PI/2)*side;
+   const d=Math.hypot(t.x-this.x,t.y-this.y);this.boosting=d>210&&d<720
+  }else{this.boosting=this.aiState==='wander'?Math.random()<.012:false}
+  if(nearCount>=7){sepX*=1.9;sepY*=1.9;this.boosting=false}
+  const dx=tx-this.x+sepX+avoidX,dy=ty-this.y+sepY+avoidY;if(Math.abs(dx)+Math.abs(dy)>1)this.ta=Math.atan2(dy,dx)+Math.sin(G.time*1.7+this.seed)*.018;
+ }
+ eatFood(){
+  const R=this.radius+this.mag,foods=G.spatial?G.spatial.foodsNear(this.x,this.y,R+22):G.foods;
+  for(const f of foods){if(f.dead)continue;let dx=this.x-f.x,dy=this.y-f.y,d=Math.hypot(dx,dy);if(d<R&&d>3){const q=(1-d/R)*.16;f.x+=dx*q;f.y+=dy*q}if(d<this.radius+f.r+3){f.dead=true;this.score+=f.v*this.feast;G.burst(f.x,f.y,f.c,4)}}
+  if(this.orbiters)for(let k=0;k<this.orbiters;k++){const a=G.time*1.8+k*G.TAU/this.orbiters,ox=this.x+Math.cos(a)*(this.radius+28),oy=this.y+Math.sin(a)*(this.radius+28),near=G.spatial?G.spatial.foodsNear(ox,oy,22):G.foods;for(const f of near)if(!f.dead&&Math.hypot(f.x-ox,f.y-oy)<17){f.dead=true;this.score+=f.v*this.feast*.8}}
+ }
+ checkCollision(){
+  const heads=G.spatial?G.spatial.headsNear(this.x,this.y,70):G.snakes;
+  for(const other of heads){if(other===this||other.dead||other.inv>0)continue;const hd=Math.hypot(this.x-other.x,this.y-other.y);if(hd<(this.radius+other.radius)*.72){this.die(other);other.die(this);return}}
+  const bodies=G.spatial?G.spatial.bodiesNear(this.x,this.y,72):null;
+  if(bodies){for(const rec of bodies){const other=rec.s;if(other===this||other.dead||other.inv>0)continue;if(Math.hypot(this.x-rec.p.x,this.y-rec.p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}
+  else for(const other of G.snakes){if(other===this||other.dead||other.inv>0)continue;for(let i=6;i<other.body.length;i+=2){const p=other.body[i];if(Math.hypot(this.x-p.x,this.y-p.y)<this.radius*.72+other.radius*.68){this.die(other);return}}}
+ }
+ die(killer){
+  if(this.dead)return;this.dead=true;const step=Math.max(2,Math.ceil(this.body.length/120));for(let i=0;i<this.body.length;i+=step){const p=this.body[i];G.foods.push(new Food(p.x+rnd(-5,5),p.y+rnd(-5,5),rnd(3,8),this.palette[i%2]))}
+  G.burst(this.x,this.y,this.palette[0],18);if(killer&&killer!==this){killer.kills++;killer.score+=20+(killer.killBonus||0);G.onKill?.(killer,this)}if(this===G.player)setTimeout(G.gameOver,360)
+ }
 }
 G.Food=Food;G.Snake=Snake;
 })();
