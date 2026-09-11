@@ -8,64 +8,24 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <canvas id="game"></canvas>
-
-    <div id="hud" class="hidden">
-      <div class="hud-left glass">
-        <div class="hud-brand"><span class="brand-dot"></span>萌鳞进化</div>
-        <div class="hud-row"><span>长度</span><b id="scoreText">0</b></div>
-        <div class="hud-row"><span>阶段</span><b id="stageText">幼鳞</b></div>
-        <div class="xp"><i id="xpBar"></i></div>
-      </div>
-      <div class="hud-right glass">
-        <div class="rank-title">本局排行</div>
-        <ol id="rankList"></ol>
-      </div>
-      <div id="buffStrip"></div>
-    </div>
-
-    <div id="intro" class="panel-wrap">
-      <section class="panel hero-panel">
-        <div class="logo-creature" aria-hidden="true">
-          <div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div>
-          <div class="head"><span class="eye e1"></span><span class="eye e2"></span><span class="mouth"></span></div>
-        </div>
-        <div class="eyebrow">H5 · 进化肉鸽贪吃蛇</div>
-        <h1>萌鳞进化 <small>EvoSnake</small></h1>
-        <p>吃光点、猎小蛇、躲大蛇。每次成长都能发生<strong>外形进化</strong>，并叠出会环绕在身边的 Buff。</p>
-        <div class="feature-chips">
-          <span>🐟 大鱼吃小鱼</span><span>✨ 外形进化</span><span>🧬 三选一 Buff</span><span>🤖 AI 蛇群</span>
-        </div>
-        <input id="nameInput" maxlength="8" value="小团子" aria-label="昵称" />
-        <button id="startBtn" class="primary">开始进化</button>
-        <div class="tips">手机：左下拖动方向 · 右下按住冲刺<br/>电脑：鼠标/方向键移动 · 空格冲刺</div>
-      </section>
-    </div>
-
-    <div id="upgrade" class="panel-wrap hidden">
-      <section class="panel upgrade-panel">
-        <div class="eyebrow">EVOLUTION CHOICE</div>
-        <h2>选择一个进化 Buff</h2>
-        <p class="sub">能力不仅改数值，也会直接长在你身上。</p>
-        <div id="upgradeCards" class="upgrade-grid"></div>
-      </section>
-    </div>
-
-    <div id="gameOver" class="panel-wrap hidden">
-      <section class="panel result-panel">
-        <div class="eyebrow">THIS RUN ENDED</div>
-        <h2>这条进化线断了</h2>
-        <div class="result-score"><span>最终长度</span><b id="finalScore">0</b></div>
-        <div id="finalBuild" class="final-build"></div>
-        <button id="restartBtn" class="primary">再来一局</button>
-      </section>
-    </div>
-
-    <div id="joystick" class="joy hidden"><div class="joy-knob"></div></div>
-    <button id="boostBtn" class="boost hidden"><span>⚡</span><small>冲刺</small></button>
-    <div id="toast"></div>
+<div id="app">
+  <canvas id="game"></canvas>
+  <div id="hud" class="hidden">
+    <div class="hud-left glass"><div class="hud-brand"><span class="brand-dot"></span>萌鳞进化</div><div class="hud-row"><span>长度</span><b id="scoreText">0</b></div><div class="hud-row"><span>阶段</span><b id="stageText">幼鳞</b></div><div class="xp"><i id="xpBar"></i></div></div>
+    <div class="hud-right glass"><div class="rank-title">本局排行</div><ol id="rankList"></ol></div>
+    <div id="buffStrip"></div>
   </div>
-  <script src="game.js"></script>
-</body>
-</html>
+  <div id="intro" class="panel-wrap"><section class="panel hero-panel">
+    <div class="logo-creature" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div><div class="head"><span class="eye e1"></span><span class="eye e2"></span><span class="mouth"></span></div></div>
+    <div class="eyebrow">H5 · 进化肉鸽贪吃蛇</div><h1>萌鳞进化 <small>EvoSnake</small></h1>
+    <p>吃光点、诱导对手撞上你的身体、活得更久。<strong>无论多大的蛇，头撞到别人身体都会失败</strong>；长度只推动外形进化和 Build 成长。</p>
+    <div class="feature-chips"><span>⚔️ 小蛇能反杀</span><span>✨ 五阶段进化</span><span>🧬 三选一 Buff</span><span>🤖 AI 蛇群</span></div>
+    <input id="nameInput" maxlength="8" value="小团子" aria-label="昵称" /><button id="startBtn" class="primary">开始进化</button>
+    <div class="tips">手机：左下拖动方向 · 右下按住冲刺<br/>电脑：鼠标/方向键移动 · 空格冲刺</div>
+  </section></div>
+  <div id="upgrade" class="panel-wrap hidden"><section class="panel upgrade-panel"><div class="eyebrow">EVOLUTION CHOICE</div><h2>选择一个进化 Buff</h2><p class="sub">能力会改变操作或收益，也会以环绕特效直接显示在角色身上。</p><div id="upgradeCards" class="upgrade-grid"></div></section></div>
+  <div id="gameOver" class="panel-wrap hidden"><section class="panel result-panel"><div class="eyebrow">THIS RUN ENDED</div><h2>这条进化线断了</h2><div class="result-score"><span>最终长度</span><b id="finalScore">0</b></div><div id="finalBuild" class="final-build"></div><button id="restartBtn" class="primary">再来一局</button></section></div>
+  <div id="joystick" class="joy hidden"><div class="joy-knob"></div></div><button id="boostBtn" class="boost hidden"><span>⚡</span><small>冲刺</small></button><div id="toast"></div>
+</div>
+<script src="base.js"></script><script src="entities.js"></script><script src="render.js"></script><script src="main-core.js"></script><script src="controls.js"></script>
+</body></html>
