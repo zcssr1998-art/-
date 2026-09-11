@@ -14,11 +14,12 @@ jobs:
           node --check skins.js
           node --check spatial.js
           node --check entities.js
+          node --check systems-v3.js
           node --check render.js
-          node --check effects.js
+          node --check render-v3.js
           node --check sound.js
           node --check main-core.js
           node --check controls.js
           node --check tests/e2e.mjs
       - name: Check required files
-        run: test -f index.html && test -f style.css && test -f v2.css && test -f base.js && test -f skins.js && test -f spatial.js && test -f entities.js && test -f render.js && test -f effects.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs
+        run: test -f index.html && test -f style.css && test -f v2.css && test -f v3.css && test -f base.js && test -f skins.js && test -f spatial.js && test -f entities.js && test -f systems-v3.js && test -f render.js && test -f render-v3.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs

@@ -4,11 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <meta name="theme-color" content="#101633" />
-  <meta name="description" content="萌鳞进化：Q版进化肉鸽贪吃蛇 H5 Demo" />
+  <meta name="description" content="萌鳞进化：Q版十段进化肉鸽贪吃蛇 H5" />
   <link rel="icon" href="data:," />
   <title>萌鳞进化 · EvoSnake</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="v2.css" />
+  <link rel="stylesheet" href="v3.css" />
 </head>
 <body>
 <div id="app">
@@ -28,20 +29,22 @@
 
   <div id="intro" class="panel-wrap"><section class="panel hero-panel">
     <div class="logo-creature" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div><div class="head"><span class="eye e1"></span><span class="eye e2"></span><span class="mouth"></span></div></div>
-    <div class="eyebrow">H5 · 进化肉鸽贪吃蛇</div><h1>萌鳞进化 <small>EvoSnake</small></h1>
-    <p>吃光点、诱导对手撞上你的身体、活得更久。<strong>再大的蛇只要头撞上别人身体照样会死</strong>；长度推动的是外形进化和 Build，而不是碾压权。</p>
-    <div class="evo-road"><span>幼鳞</span><i>→</i><span>潮鳍</span><i>→</i><span>角鲛</span><i>→</i><span>云蛟</span><i>→</i><span>星龙</span></div>
-    <div class="feature-chips"><span>⚔️ 小蛇能反杀</span><span>✨ 全身五段进化</span><span>🎭 30套皮肤</span><span>🤖 六种 AI 性格</span></div>
+    <div class="eyebrow">H5 · 十段进化肉鸽贪吃蛇</div><h1>萌鳞进化 <small>EvoSnake</small></h1>
+    <p>吃星光、诱导对手撞上你的身体、活得更久。<strong>体型再大，头撞上别人的身体仍然会死</strong>；长度推动的是外形进化和 Build，而不是碾压权。</p>
+    <div class="evo-road ten"><span>幼鳞</span><i>→</i><span>微光鳍</span><i>→</i><span>潮鳍</span><i>→</i><span>棘鲛</span><i>→</i><span>角鲛</span><i>→</i><span>雾蛟</span><i>→</i><span>云蛟</span><i>→</i><span>曜甲龙</span><i>→</i><span>星环龙</span><i>→</i><span>天穹星龙</span></div>
+    <div class="feature-chips"><span>⚔️ 小蛇能反杀</span><span>✨ 全身十段异变</span><span>🧬 16种差异 Buff</span><span>🎭 30套皮肤</span><span>🤖 六种 AI 性格</span></div>
     <div class="skin-picker" aria-label="皮肤选择"><button id="skinPrev" type="button">‹</button><div class="skin-card"><span id="skinIcon">🐍</span><div><small>本局皮肤 <b id="skinCount">1/30</b></small><strong id="skinName">青玉灵蛇</strong></div></div><button id="skinNext" type="button">›</button><button id="skinRandom" class="skin-random" type="button">🎲</button></div>
     <div class="best-line">历史最佳长度 <b id="bestText">0</b></div>
-    <input id="nameInput" maxlength="8" value="小团子" aria-label="昵称" /><button id="startBtn" class="primary">开始进化</button>
-    <div class="tips">手机：左下摇杆移动 · 右下按住冲刺<br/>电脑：移动鼠标跟随 · WASD/方向键移动 · 空格或 Shift 冲刺<br/>鼠标和键盘可随时无缝切换，以你最后一次输入为准</div>
+    <input id="nameInput" maxlength="8" value="小团子" aria-label="昵称" /><button id="startBtn" class="primary">横屏开始进化</button>
+    <div class="tips">手机：开始时会优先尝试自动锁定横屏；iPhone/微信若阻止网页强制旋转，会提示你横放手机后自动进入。<br/>电脑：鼠标跟随 / WASD / 方向键 · 空格或 Shift 冲刺</div>
   </section></div>
 
-  <div id="upgrade" class="panel-wrap hidden"><section class="panel upgrade-panel"><div class="eyebrow">EVOLUTION CHOICE</div><h2>选择一个进化 Buff</h2><p class="sub">每种 Buff 都会沿整条身体形成不同的游离特效；仍然不提供撞击免死。</p><div id="upgradeCards" class="upgrade-grid"></div></section></div>
+  <div id="upgrade" class="panel-wrap hidden"><section class="panel upgrade-panel"><div class="eyebrow">EVOLUTION CHOICE</div><h2>选择一个进化 Buff</h2><p class="sub">16 种 Buff 的机制和全身游离特效都不同；不提供撞击免死。</p><div id="upgradeCards" class="upgrade-grid"></div></section></div>
   <div id="gameOver" class="panel-wrap hidden"><section class="panel result-panel"><div class="eyebrow">THIS RUN ENDED</div><h2>这条进化线断了</h2><div class="result-score"><span>最终长度</span><b id="finalScore">0</b></div><div class="result-kills">本局反杀 <b id="finalKills">0</b></div><div id="finalBuild" class="final-build"></div><button id="restartBtn" class="primary">再来一局</button></section></div>
-  <div id="evoFlash"><small>EVOLUTION</small><b>潮鳍</b><span>头 · 身 · 尾同时异变</span></div>
+  <div id="evoFlash"><small>EVOLUTION</small><b>微光鳍</b><span>头 · 身 · 尾同时异变</span></div>
   <div id="joystick" class="joy hidden"><div class="joy-knob"></div></div><button id="boostBtn" class="boost hidden"><span>⚡</span><small>按住冲刺</small></button><div id="toast"></div>
+
+  <div id="rotateGate" class="rotate-gate hidden"><div class="rotate-card"><div class="phone-rotate">▯↻</div><h2>横屏游玩</h2><p>正在尝试自动切换横屏。若 iPhone / 微信阻止网页强制旋转，把手机横过来即可自动继续。</p><button id="rotateTry" class="primary" type="button">再次尝试自动横屏</button></div></div>
 </div>
-<script src="base.js"></script><script src="skins.js"></script><script src="spatial.js"></script><script src="entities.js"></script><script src="render.js"></script><script src="effects.js"></script><script src="sound.js"></script><script src="main-core.js"></script><script src="controls.js"></script>
+<script src="base.js"></script><script src="skins.js"></script><script src="spatial.js"></script><script src="entities.js"></script><script src="systems-v3.js"></script><script src="render.js"></script><script src="render-v3.js"></script><script src="sound.js"></script><script src="main-core.js"></script><script src="controls.js"></script>
 </body></html>
