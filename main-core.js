@@ -1,25 +1,72 @@
 (()=>{
 const G=window.EVO,$=id=>document.getElementById(id),C=$('game');
-G.canvas=C;G.ctx=C.getContext('2d');G.camera={x:1500,y:1050,z:1};G.foods=[];G.snakes=[];G.parts=[];G.time=0;G.vw=innerWidth;G.vh=innerHeight;G.input={x:1,y:0,boost:false};
-let dpr=1,last=0,running=false,paused=false,upgradeIndex=0,lastStage='幼鳞',best=0;
+G.canvas=C;G.ctx=C.getContext('2d');const CX=G.WORLD.w/2,CY=G.WORLD.h/2;G.camera={x:CX,y:CY,z:1};G.foods=[];G.snakes=[];G.parts=[];G.time=0;G.vw=innerWidth;G.vh=innerHeight;G.input={x:1,y:0,boost:false};G.spatial=new G.SpatialGrid(G.SIM.cell);
+let dpr=1,last=0,acc=0,running=false,paused=false,upgradeIndex=0,lastStage='幼鳞',best=0,hudClock=0,cleanupClock=0;
 try{best=Number(localStorage.getItem('evo_best')||0)}catch{};
 const esc=s=>String(s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 function resize(){G.vw=innerWidth;G.vh=innerHeight;dpr=Math.min(devicePixelRatio||1,2);C.width=G.vw*dpr;C.height=G.vh*dpr;C.style.width=G.vw+'px';C.style.height=G.vh+'px';G.ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
 G.screen=(x,y)=>({x:(x-G.camera.x)*G.camera.z+G.vw/2,y:(y-G.camera.y)*G.camera.z+G.vh/2});
-G.burst=(x,y,c,n=6)=>{for(let i=0;i<n;i++)G.parts.push({x,y,vx:G.rnd(-70,70),vy:G.rnd(-70,70),life:G.rnd(.3,.75),c,r:G.rnd(1,4)})};
+G.burst=(x,y,c,n=6)=>{const cap=Math.max(0,260-G.parts.length);n=Math.min(n,cap);for(let i=0;i<n;i++)G.parts.push({x,y,vx:G.rnd(-70,70),vy:G.rnd(-70,70),life:G.rnd(.3,.75),c,r:G.rnd(1,4)})};
 G.toast=s=>{const e=$('toast');e.textContent=s;e.classList.add('show');clearTimeout(G.toast.timer);G.toast.timer=setTimeout(()=>e.classList.remove('show'),1250)};
 function evolutionFlash(stage){const e=$('evoFlash');if(!e)return;e.querySelector('b').textContent=stage;e.classList.remove('show');void e.offsetWidth;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
-function food(n=1){for(let i=0;i<n;i++)G.foods.push(new G.Food())}
-function bot(){G.snakes.push(new G.Snake({ai:true,name:G.pick(G.names),score:G.rnd(60,1100),palette:G.pick(G.palettes),style:G.pick(G.botStyles)}))}
+function pointAround(x,y,min=100,max=1300){const a=G.rnd(0,G.TAU),d=Math.sqrt(G.rnd(min*min,max*max));return{x:G.clamp(x+Math.cos(a)*d,80,G.WORLD.w-80),y:G.clamp(y+Math.sin(a)*d,80,G.WORLD.h-80)}}
+function food(n=1){
+ const alive=G.snakes.filter(s=>!s.dead);
+ for(let i=0;i<n;i++){
+  let x,y;if(alive.length&&Math.random()<.88){const a=G.pick(alive),p=pointAround(a.x,a.y,40,1250);x=p.x;y=p.y}else{x=G.rnd(60,G.WORLD.w-60);y=G.rnd(60,G.WORLD.h-60)}
+  G.foods.push(new G.Food(x,y));
+ }
+}
+function bot(){
+ const anchor=G.player&&!G.player.dead?G.player:{x:CX,y:CY},p=pointAround(anchor.x,anchor.y,850,3150);
+ G.snakes.push(new G.Snake({ai:true,name:G.pick(G.names),score:G.rnd(60,1250),x:p.x,y:p.y,palette:G.pick(G.palettes),style:G.pick(G.botStyles)}))
+}
 function setBest(v){if(v<=best)return;best=Math.floor(v);try{localStorage.setItem('evo_best',String(best))}catch{}if($('bestText'))$('bestText').textContent=best}
 G.onKill=(killer,victim)=>{if(killer===G.player){G.sfx?.('kill');G.toast(`✦ 反杀 ${victim.name}  +${20+(killer.killBonus||0)}`);const f=$('killFeed');if(f){const d=document.createElement('div');d.textContent=`${killer.name} ✦ ${victim.name}`;f.prepend(d);setTimeout(()=>d.remove(),3200)}}};
-G.reset=()=>{G.audioInit?.();G.foods=[];G.snakes=[];G.parts=[];upgradeIndex=0;for(let i=0;i<460;i++)food();const clean=($('nameInput').value.trim()||'小团子').slice(0,8);G.player=new G.Snake({name:clean,score:80,x:1500,y:1050,palette:G.palettes[0]});G.snakes.push(G.player);for(let i=0;i<12;i++)bot();G.camera={x:1500,y:1050,z:1};lastStage=G.player.stage[0];running=true;paused=false;$('intro').classList.add('hidden');$('gameOver').classList.add('hidden');$('upgrade').classList.add('hidden');$('hud').classList.remove('hidden');$('joystick').classList.remove('hidden');$('boostBtn').classList.remove('hidden');if($('killFeed'))$('killFeed').innerHTML='';buffUI();hud()};
+G.reset=()=>{
+ G.audioInit?.();G.foods=[];G.snakes=[];G.parts=[];upgradeIndex=0;hudClock=cleanupClock=0;
+ const clean=($('nameInput').value.trim()||'小团子').slice(0,8);G.player=new G.Snake({name:clean,score:80,x:CX,y:CY,palette:G.palettes[0]});G.snakes.push(G.player);
+ for(let i=0;i<G.SIM.bots;i++)bot();for(let i=0;i<G.SIM.foods;i++)food();G.spatial.rebuild();
+ G.camera={x:CX,y:CY,z:1};lastStage=G.player.stage[0];running=true;paused=false;$('intro').classList.add('hidden');$('gameOver').classList.add('hidden');$('upgrade').classList.add('hidden');$('hud').classList.remove('hidden');$('joystick').classList.remove('hidden');$('boostBtn').classList.remove('hidden');if($('killFeed'))$('killFeed').innerHTML='';buffUI();hud();
+};
 function buffUI(){$('buffStrip').innerHTML=G.player?G.player.buffs.map(b=>`<span class="buff-pill" title="${esc(b[1])}">${b[0]}</span>`).join(''):''}
 function upgrade(){paused=true;G.input.boost=false;const a=[];while(a.length<3){const b=G.pick(G.buffs);if(!a.includes(b))a.push(b)}const h=$('upgradeCards');h.innerHTML='';for(const b of a){const d=document.createElement('button');d.className='upgrade-card';d.innerHTML=`<div class="upgrade-icon">${b[0]}</div><div class="upgrade-name">${esc(b[1])}</div><div class="upgrade-desc">${esc(b[3])}</div><div class="upgrade-tag">${esc(b[2])}</div>`;d.onclick=()=>{b[4](G.player);G.player.buffs.push(b);$('upgrade').classList.add('hidden');paused=false;G.sfx?.('buff');G.toast(b[0]+' '+b[1]);buffUI()};h.appendChild(d)}$('upgrade').classList.remove('hidden')}
 G.gameOver=()=>{if(!running)return;running=false;G.sfx?.('death');setBest(G.player.score);$('finalScore').textContent=Math.floor(G.player.score);if($('finalKills'))$('finalKills').textContent=G.player.kills;$('finalBuild').innerHTML=G.player.buffs.length?G.player.buffs.map(b=>`<span>${b[0]} ${esc(b[1])}</span>`).join(''):'<span>这次还没形成 Build</span>';$('gameOver').classList.remove('hidden');$('joystick').classList.add('hidden');$('boostBtn').classList.add('hidden')};
-function hud(){const P=G.player;if(!P)return;$('scoreText').textContent=Math.floor(P.score);$('stageText').textContent=P.stage[0];if($('killText'))$('killText').textContent=P.kills;const i=G.stages.indexOf(P.stage),n=G.stages[Math.min(i+1,G.stages.length-1)],q=i===G.stages.length-1?1:(P.score-P.stage[1])/(n[1]-P.stage[1]);$('xpBar').style.width=G.clamp(q*100,0,100)+'%';const r=G.snakes.filter(s=>!s.dead).sort((a,b)=>b.score-a.score).slice(0,5);$('rankList').innerHTML=r.map(s=>`<li class="${s===P?'me':''}">${esc(s.name)} · ${Math.floor(s.score)}</li>`).join('')}
-function update(dt){G.time+=dt;if(!running||paused)return;G.updateControls?.();const P=G.player;if(P&&!P.dead){P.ta=Math.atan2(G.input.y,G.input.x);P.boosting=G.input.boost}for(const s of G.snakes)s.update(dt);G.foods=G.foods.filter(f=>!f.dead);while(G.foods.length<460)food();while(G.snakes.filter(s=>s.ai&&!s.dead).length<12)bot();G.snakes=G.snakes.filter(s=>!s.dead||s===P);if(P&&!P.dead){G.camera.x=G.lerp(G.camera.x,P.x,.08);G.camera.y=G.lerp(G.camera.y,P.y,.08);G.camera.z=G.lerp(G.camera.z,G.clamp(1.03-Math.sqrt(P.score)/1500,.73,1),.05);if(P.stage[0]!==lastStage){lastStage=P.stage[0];G.sfx?.('evo');evolutionFlash(lastStage);G.burst(P.x,P.y,'#fff2a3',30)}if(upgradeIndex<G.upgradeMarks.length&&P.score>=G.upgradeMarks[upgradeIndex]){upgradeIndex++;upgrade()}}for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}G.parts=G.parts.filter(p=>p.life>0);hud()}
-function draw(){G.drawBackground();for(const f of G.foods)f.draw();for(const s of [...G.snakes].sort((a,b)=>a.score-b.score))s.draw();for(const p of G.parts){const q=G.screen(p.x,p.y);G.ctx.globalAlpha=G.clamp(p.life*2,0,1);G.ctx.fillStyle=p.c;G.ctx.beginPath();G.ctx.arc(q.x,q.y,p.r*G.camera.z,0,G.TAU);G.ctx.fill()}G.ctx.globalAlpha=1}
-function loop(ts){const dt=Math.min(.033,(ts-last)/1000||.016);last=ts;update(dt);draw();requestAnimationFrame(loop)}
+function hud(){
+ const P=G.player;if(!P)return;$('scoreText').textContent=Math.floor(P.score);$('stageText').textContent=P.stage[0];if($('killText'))$('killText').textContent=P.kills;
+ const i=G.stages.indexOf(P.stage),n=G.stages[Math.min(i+1,G.stages.length-1)],q=i===G.stages.length-1?1:(P.score-P.stage[1])/(n[1]-P.stage[1]);$('xpBar').style.width=G.clamp(q*100,0,100)+'%';
+ const r=G.snakes.filter(s=>!s.dead).sort((a,b)=>b.score-a.score).slice(0,5);$('rankList').innerHTML=r.map(s=>`<li class="${s===P?'me':''}">${esc(s.name)} · ${Math.floor(s.score)}</li>`).join('')
+}
+function update(dt){
+ G.time+=dt;if(!running||paused)return;G.updateControls?.();const P=G.player;if(P&&!P.dead){P.ta=Math.atan2(G.input.y,G.input.x);P.boosting=G.input.boost}
+ G.spatial.rebuild();
+ if(P&&!P.dead)P.update(dt);
+ for(const s of G.snakes){
+  if(s===P||s.dead)continue;
+  const d2=P&&!P.dead?(s.x-P.x)**2+(s.y-P.y)**2:0,near=G.SIM.near,mid=G.SIM.mid,interval=d2<near*near?G.SIM.fixedStep:d2<mid*mid?1/30:1/12;
+  s.simAccum+=dt;if(s.simAccum>=interval){const step=Math.min(.12,s.simAccum);s.simAccum=0;s.update(step)}
+ }
+ cleanupClock+=dt;if(cleanupClock>=.12){
+  cleanupClock=0;G.foods=G.foods.filter(f=>!f.dead);G.snakes=G.snakes.filter(s=>!s.dead||s===P);
+  const missingFood=G.SIM.foods-G.foods.length;if(missingFood>0)food(Math.min(24,missingFood));
+  let aliveBots=0;for(const s of G.snakes)if(s.ai&&!s.dead)aliveBots++;for(let i=0;i<Math.min(2,G.SIM.bots-aliveBots);i++)bot();
+ }
+ if(P&&!P.dead){
+  G.camera.x=G.lerp(G.camera.x,P.x,.085);G.camera.y=G.lerp(G.camera.y,P.y,.085);G.camera.z=G.lerp(G.camera.z,G.clamp(1.03-Math.sqrt(P.score)/1500,.73,1),.05);
+  if(P.stage[0]!==lastStage){lastStage=P.stage[0];G.sfx?.('evo');evolutionFlash(lastStage);G.burst(P.x,P.y,'#fff2a3',30)}
+  if(upgradeIndex<G.upgradeMarks.length&&P.score>=G.upgradeMarks[upgradeIndex]){upgradeIndex++;upgrade()}
+ }
+ for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}G.parts=G.parts.filter(p=>p.life>0);
+ hudClock+=dt;if(hudClock>=.16){hudClock=0;hud()}
+}
+function draw(){
+ G.drawBackground();for(const f of G.foods)f.draw();
+ const sorted=G.snakes.slice().sort((a,b)=>a.score-b.score);for(const s of sorted)s.draw();
+ for(const p of G.parts){const q=G.screen(p.x,p.y);if(q.x<-15||q.x>G.vw+15||q.y<-15||q.y>G.vh+15)continue;G.ctx.globalAlpha=G.clamp(p.life*2,0,1);G.ctx.fillStyle=p.c;G.ctx.beginPath();G.ctx.arc(q.x,q.y,p.r*G.camera.z,0,G.TAU);G.ctx.fill()}G.ctx.globalAlpha=1
+}
+function loop(ts){
+ const STEP=G.SIM.fixedStep,frame=Math.min(.1,(ts-last)/1000||STEP);last=ts;acc+=frame;let steps=0;
+ while(acc>=STEP&&steps<4){update(STEP);acc-=STEP;steps++}if(steps===4&&acc>STEP*4)acc=0;draw();requestAnimationFrame(loop)
+}
 if($('bestText'))$('bestText').textContent=best;requestAnimationFrame(loop);
 })();
