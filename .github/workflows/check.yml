@@ -11,6 +11,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check base.js
+          node --check skins.js
           node --check spatial.js
           node --check entities.js
           node --check render.js
@@ -20,4 +21,4 @@ jobs:
           node --check controls.js
           node --check tests/e2e.mjs
       - name: Check required files
-        run: test -f index.html && test -f style.css && test -f v2.css && test -f base.js && test -f spatial.js && test -f entities.js && test -f render.js && test -f effects.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs
+        run: test -f index.html && test -f style.css && test -f v2.css && test -f base.js && test -f skins.js && test -f spatial.js && test -f entities.js && test -f render.js && test -f effects.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs
