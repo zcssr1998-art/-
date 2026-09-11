@@ -2,7 +2,7 @@
   "description": "EvoSnake 微信小游戏",
   "compileType": "game",
   "libVersion": "latest",
-  "appid": "touristappid",
+  "appid": "wx2ce1b5022e1d37f0",
   "projectname": "EvoSnake",
   "setting": {
     "es6": true,
