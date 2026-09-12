@@ -1,0 +1,12 @@
+{
+  "name": "evosnake-tools",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "test:minigame": "node tests/minigame-smoke.cjs && node tests/giant-smoke.cjs && node tests/orientation-smoke.cjs",
+    "wechat:upload": "node tools/wechat-upload.cjs"
+  },
+  "devDependencies": {
+    "miniprogram-ci": "2.1.31"
+  }
+}
