@@ -30,11 +30,12 @@ jobs:
           node --check minigame/src/input.js
           node --check minigame/src/advanced.js
           node --check minigame/src/giant.js
+          node --check minigame/src/version.js
           node --check minigame/src/main.js
           node --check tests/minigame-smoke.cjs
           node --check tests/giant-smoke.cjs
       - name: Check required files
-        run: test -f index.html && test -f style.css && test -f v2.css && test -f v3.css && test -f base.js && test -f skins.js && test -f spatial.js && test -f entities.js && test -f systems-v3.js && test -f render.js && test -f render-v3.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs && test -f minigame/game.js && test -f minigame/game.json && test -f minigame/project.config.json && test -f minigame/src/config.js && test -f minigame/src/spatial.js && test -f minigame/src/engine.js && test -f minigame/src/platform.js && test -f minigame/src/render.js && test -f minigame/src/input.js && test -f minigame/src/advanced.js && test -f minigame/src/giant.js && test -f minigame/src/main.js && test -f tests/minigame-smoke.cjs && test -f tests/giant-smoke.cjs
+        run: test -f index.html && test -f style.css && test -f v2.css && test -f v3.css && test -f base.js && test -f skins.js && test -f spatial.js && test -f entities.js && test -f systems-v3.js && test -f render.js && test -f render-v3.js && test -f sound.js && test -f main-core.js && test -f controls.js && test -f tests/e2e.mjs && test -f minigame/game.js && test -f minigame/game.json && test -f minigame/project.config.json && test -f minigame/src/config.js && test -f minigame/src/spatial.js && test -f minigame/src/engine.js && test -f minigame/src/platform.js && test -f minigame/src/render.js && test -f minigame/src/input.js && test -f minigame/src/advanced.js && test -f minigame/src/giant.js && test -f minigame/src/version.js && test -f minigame/src/main.js && test -f tests/minigame-smoke.cjs && test -f tests/giant-smoke.cjs
       - name: Run Mini Game smoke test
         run: node tests/minigame-smoke.cjs
       - name: Run giant growth smoke test
