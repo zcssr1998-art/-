@@ -1,0 +1,63 @@
+name: Upload WeChat Mini Game
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'minigame/**'
+      - 'tools/wechat-upload.cjs'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/wechat-upload.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: wechat-minigame-upload
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install upload tool
+        run: npm install --no-audit --no-fund
+
+      - name: Run Mini Game regression tests
+        run: npm run test:minigame
+
+      - name: Check WeChat upload secret
+        id: secret
+        env:
+          WX_PRIVATE_KEY: ${{ secrets.WX_MINIGAME_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          if [ -n "$WX_PRIVATE_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "WeChat upload secret is configured."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::WX_MINIGAME_PRIVATE_KEY is not configured yet; tests passed, upload skipped."
+          fi
+
+      - name: Materialize WeChat private key
+        if: steps.secret.outputs.ready == 'true'
+        env:
+          WX_PRIVATE_KEY: ${{ secrets.WX_MINIGAME_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          printf '%s' "$WX_PRIVATE_KEY" > "$RUNNER_TEMP/private.wx2ce1b5022e1d37f0.key"
+          chmod 600 "$RUNNER_TEMP/private.wx2ce1b5022e1d37f0.key"
+
+      - name: Upload to WeChat Mini Game
+        if: steps.secret.outputs.ready == 'true'
+        env:
+          WECHAT_CI_KEY: ${{ runner.temp }}/private.wx2ce1b5022e1d37f0.key
+        run: npm run wechat:upload
