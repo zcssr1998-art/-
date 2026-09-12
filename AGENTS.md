@@ -134,3 +134,15 @@ Before finishing, report:
 - **Remaining risk:** real unverified paths or known limitations only.
 
 Never say `done`, `fixed`, or `works` when the relevant gameplay path has not been verified.
+
+## 13. Mini-game release version notice
+
+For every user-visible WeChat Mini Game update:
+
+- Update `minigame/src/version.js` in the same work batch.
+- Increment `RELEASE.version` using `vX.Y.Z` format.
+- Set `RELEASE.time` to the actual update time in Beijing time (UTC+8) and explicitly include `北京时间`.
+- Keep `RELEASE.notes` concise and limited to material player-visible changes.
+- The intro screen must always expose the current version badge; tapping it must open the in-game update notice.
+- Keep the smoke test that opens and closes the release notice. A player-visible update is not complete if release metadata is stale or the notice is not clickable.
+- Final reporting should tell the user the new version number so they can compare it with the version shown in WeChat after upload.
