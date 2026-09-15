@@ -1,47 +1,52 @@
 # AGENTS.md — Web Game
 
-This repository is developed with AI coding agents. Treat this file as the default operating procedure for all work in this repo.
+This repository inherits the cross-project AI workflow from:
 
-## 1. User / product-owner model
+`https://github.com/zcssr1998-art/AI-Development-Rules/blob/main/GLOBAL_AI_RULES.md`
 
-- The user is the product owner, not the implementation engineer.
-- Convert natural-language requests into concrete engineering tasks yourself.
-- Resolve routine implementation, debugging, dependency, and build decisions from the repository and tools instead of asking the user to do engineering triage.
-- Prefer the smallest reversible implementation that advances the requested gameplay goal.
-- Final status should be concise Chinese unless the user asks otherwise.
+This file contains **web-game-specific** rules only. Rule precedence:
 
-## 2. Definition of done
+`explicit current user instruction > this AGENTS.md > GLOBAL_AI_RULES.md > agent defaults`
 
-Never claim a gameplay feature is complete because the code compiles, the page loads, or the implementation looks correct by inspection.
+## New-session read order
 
-A change is complete only when all applicable checks pass:
+1. `AGENTS.md`
+2. global `GLOBAL_AI_RULES.md`
+3. current task/state file if present
+4. current branch / HEAD / `git status` / relevant diff
+5. only files required for the current task
 
-1. The game starts successfully.
-2. The changed feature is exercised in a real browser/runtime.
-3. Relevant controls are actually used.
-4. Browser console/runtime errors are checked.
-5. The player can complete the affected gameplay loop without a blocking defect.
-6. The final report states what was changed and what was actually tested.
+Do not paste the global rulebook or repo-resident taskbooks into chat again.
 
-If real runtime testing is unavailable, explicitly say `implemented but not runtime-verified`.
+## Runtime definition of done
 
-## 3. Mandatory web-game iteration loop
+A gameplay feature is not complete because the code compiles or the page loads.
+
+When applicable:
+
+1. game starts successfully;
+2. changed feature is exercised in a real browser/runtime;
+3. relevant controls are actually used;
+4. browser console/runtime errors are checked;
+5. affected gameplay loop can be completed without a blocking defect.
+
+If runtime testing is unavailable, report `implemented but not runtime-verified`.
+
+## Mandatory web-game iteration loop
 
 For gameplay changes:
 
-1. Inspect the existing control/state/update loop.
-2. Make one coherent change.
-3. Launch or refresh the game.
-4. Send real player input.
-5. Observe movement, collisions, state changes, UI, and console output.
-6. Fix issues found.
-7. Repeat until the relevant loop works end-to-end.
+1. inspect the existing control/state/update loop;
+2. make one coherent change;
+3. launch/refresh the game;
+4. send real player input;
+5. observe movement, collisions, state changes, UI, and console output;
+6. fix issues found;
+7. repeat until the affected loop works end-to-end.
 
-Do not make a large batch of speculative gameplay edits without intermediate playtesting.
+Do not make a large speculative batch of gameplay edits without intermediate playtesting.
 
-## 4. Control quality is a first-class requirement
-
-The game must support the control schemes advertised by the project.
+## Control quality
 
 For desktop, verify as applicable:
 
@@ -53,96 +58,55 @@ For desktop, verify as applicable:
 
 For mobile/touch, verify as applicable:
 
-- virtual controls actually receive touch input;
+- virtual controls receive touch input;
 - buttons are large enough and not blocked by browser UI;
-- touch controls do not accidentally scroll/zoom the page;
-- simultaneous movement/action input works if the design requires it;
-- layout remains usable in portrait/landscape modes the game supports.
+- touch controls do not accidentally scroll/zoom;
+- simultaneous movement/action input works when required;
+- layout remains usable in supported orientations.
 
 A visually present button that is not wired to gameplay is a blocking defect.
 
-## 5. Snake-specific gameplay rules
+## Snake-specific gameplay rules
 
 For snake-like mechanics:
 
-- Larger size must not automatically eliminate smaller opponents unless the design explicitly calls for it.
-- Preserve counterplay: large snakes should still be able to make positioning mistakes and lose.
-- Growth/evolution thresholds should modify the player's capabilities, presentation, or strategic options without erasing the core collision/counterplay loop.
-- Test self-collision, opponent collision, edge/world collision, spawn behavior, growth, death/restart, and high-speed turning after related changes.
-- Avoid control smoothing that creates noticeable input lag; responsiveness takes priority over ornamental motion.
+- larger size must not automatically eliminate smaller opponents unless explicitly designed that way;
+- preserve counterplay: large snakes should still be able to make positioning mistakes and lose;
+- growth/evolution thresholds should modify capabilities, presentation, or strategic options without erasing the core collision/counterplay loop;
+- test self-collision, opponent collision, edge/world collision, spawn behavior, growth, death/restart, and high-speed turning after related changes;
+- avoid control smoothing that creates noticeable input lag; responsiveness takes priority over ornamental motion.
 
-## 6. Game-feel verification
-
-Do not infer game feel from source code.
+## Game-feel verification
 
 When changing movement/camera/animation:
 
-- play long enough to perform repeated turns and recoveries;
-- test low and high speed states;
+- perform repeated turns and recoveries;
+- test low/high speed states;
 - check acceleration/deceleration, steering response, camera follow, and visual feedback together;
 - prefer responsive control over physically "correct" motion if the latter feels sluggish;
-- look for jitter, tunneling, input buffering mistakes, and frame-rate-dependent behavior.
+- look for jitter, tunneling, input-buffer mistakes, and frame-rate-dependent behavior.
 
-## 7. Scope and architecture discipline
+Do not infer game feel from source code.
 
-- Prefer the smallest correct fix over a rewrite.
-- Reuse existing systems before creating parallel abstractions.
-- Do not introduce a framework merely for architectural neatness.
-- First get the gameplay loop working; refactor after verification.
-- Avoid speculative content not requested by the user.
-
-## 8. UI / visual quality
+## UI / visual quality
 
 - Do not accept a generic flat AI-prototype look.
-- Favor readable, playful, dimensional presentation with coherent lighting/shadows/depth where consistent with the art direction.
+- Favor readable, playful, dimensional presentation consistent with the art direction.
 - Maintain clear hierarchy, touch-safe controls, responsive layout, readable feedback, and meaningful animation.
 - UI work is not complete until rendered and visually inspected when tools are available.
 
-## 9. Debugging discipline
-
-For a bug:
-
-1. Reproduce the exact failure.
-2. Identify the input/state transition involved.
-3. Form a concrete hypothesis.
-4. Make the smallest root-cause fix.
-5. Re-run the exact failed scenario.
-6. Add a regression test/check when practical.
-
-Do not call a workaround a root-cause fix.
-
-## 10. GitHub Actions / CI
-
-- Inspect failing workflow logs yourself.
-- Fix the cause rather than blindly retrying.
-- Do not disable checks or remove tests to obtain a green build.
-- Verify the relevant workflow passes before declaring success whenever possible.
-
-## 11. Repository hygiene
-
-- Never commit secrets, passwords, tokens, or private credentials.
-- Avoid unrelated formatting churn.
-- Do not commit generated build output unless intentionally tracked.
-
-## 12. Agent handoff / reporting
-
-Before finishing, report:
-
-- **Changed:** what materially changed.
-- **Verified:** what was actually launched/played/clicked/tested.
-- **Result:** what now works.
-- **Remaining risk:** real unverified paths or known limitations only.
-
-Never say `done`, `fixed`, or `works` when the relevant gameplay path has not been verified.
-
-## 13. Mini-game release version notice
+## Mini-game release version notice
 
 For every user-visible WeChat Mini Game update:
 
-- Update `minigame/src/version.js` in the same work batch.
-- Increment `RELEASE.version` using `vX.Y.Z` format.
-- Set `RELEASE.time` to the actual update time in Beijing time (UTC+8) and explicitly include `北京时间`.
-- Keep `RELEASE.notes` concise and limited to material player-visible changes.
-- The intro screen must always expose the current version badge; tapping it must open the in-game update notice.
-- Keep the smoke test that opens and closes the release notice. A player-visible update is not complete if release metadata is stale or the notice is not clickable.
-- Final reporting should tell the user the new version number so they can compare it with the version shown in WeChat after upload.
+- update `minigame/src/version.js` in the same work batch;
+- increment `RELEASE.version` using `vX.Y.Z` format;
+- set `RELEASE.time` to the actual update time in Beijing time (UTC+8) and explicitly include `北京时间`;
+- keep `RELEASE.notes` concise and limited to material player-visible changes;
+- intro screen must expose the current version badge; tapping it must open the in-game update notice;
+- keep the smoke test that opens/closes the release notice;
+- final reporting should include the new version number.
+
+## Reporting additions
+
+Follow the global concise-reporting rule. Add only relevant browser/gameplay/control/UI verification and real remaining risk.
