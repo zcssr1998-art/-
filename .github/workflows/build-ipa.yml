@@ -33,10 +33,20 @@ jobs:
             -O2 \
             -framework UIKit -framework WebKit -framework Foundation \
             -o "$APP/DSHChat" \
-            ios/main.m
+            ios/main.m 2>&1 | tee build.log
           cp ios/Info.plist "$APP/Info.plist"
           plutil -lint "$APP/Info.plist"
           printf 'APPL????' > "$APP/PkgInfo"
+
+      - name: Publish build log to log branch
+        if: always()
+        run: |
+          if [ -f build.log ]; then
+            git checkout -B dsh-chat-ipa-logs
+            git add -f build.log
+            git -c user.name=bot -c user.email=bot@local commit -m "build log" || true
+            git push -f origin HEAD:dsh-chat-ipa-logs || true
+          fi
 
       - name: Verify binary and bundle
         run: |
