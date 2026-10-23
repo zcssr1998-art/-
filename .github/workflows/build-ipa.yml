@@ -1,7 +1,7 @@
-name: build-unsigned-ipa
+﻿name: build-unsigned-ipa
 on:
   push:
-    branches: [ dsh-chat-ipa ]
+    branches: [ dsh-chat-ipa, dsh-chat-ipa-4 ]
   workflow_dispatch:
 
 permissions:
@@ -60,22 +60,22 @@ jobs:
       - name: Package ipa
         run: |
           set -euo pipefail
-          rm -f DSHChat-1.0-unsigned.ipa
-          zip -qry DSHChat-1.0-unsigned.ipa Payload
-          unzip -l DSHChat-1.0-unsigned.ipa
-          shasum -a 256 DSHChat-1.0-unsigned.ipa
+          rm -f DSHChat-1.1-unsigned.ipa
+          zip -qry DSHChat-1.1-unsigned.ipa Payload
+          unzip -l DSHChat-1.1-unsigned.ipa
+          shasum -a 256 DSHChat-1.1-unsigned.ipa
 
       - uses: actions/upload-artifact@v4
         with:
           name: DSHChat-unsigned-ipa
-          path: DSHChat-1.0-unsigned.ipa
+          path: DSHChat-1.1-unsigned.ipa
 
       - name: Publish release asset
         uses: softprops/action-gh-release@v2
         with:
           tag_name: dsh-chat-ipa-${{ github.run_number }}
           name: DSH Chat unsigned IPA build ${{ github.run_number }}
-          files: DSHChat-1.0-unsigned.ipa
+          files: DSHChat-1.1-unsigned.ipa
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
