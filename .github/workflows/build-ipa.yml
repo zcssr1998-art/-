@@ -1,0 +1,71 @@
+name: build-unsigned-ipa
+on:
+  push:
+    branches: [ dsh-chat-ipa ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphoneos --show-sdk-path
+
+      - name: Compile app bundle (unsigned, arm64)
+        run: |
+          set -euo pipefail
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          APP=Payload/DSHChat.app
+          mkdir -p "$APP"
+          xcrun --sdk iphoneos clang \
+            -arch arm64 \
+            -miphoneos-version-min=15.0 \
+            -isysroot "$SDK" \
+            -fobjc-arc \
+            -O2 \
+            -framework UIKit -framework WebKit -framework Foundation \
+            -o "$APP/DSHChat" \
+            ios/main.m
+          cp ios/Info.plist "$APP/Info.plist"
+          plutil -lint "$APP/Info.plist"
+          printf 'APPL????' > "$APP/PkgInfo"
+
+      - name: Verify binary and bundle
+        run: |
+          set -euo pipefail
+          file Payload/DSHChat.app/DSHChat
+          lipo -info Payload/DSHChat.app/DSHChat
+          codesign -dv Payload/DSHChat.app/DSHChat 2>&1 || echo "expected: no signature"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" Payload/DSHChat.app/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :NSMicrophoneUsageDescription" Payload/DSHChat.app/Info.plist
+
+      - name: Package ipa
+        run: |
+          set -euo pipefail
+          rm -f DSHChat-1.0-unsigned.ipa
+          zip -qry DSHChat-1.0-unsigned.ipa Payload
+          unzip -l DSHChat-1.0-unsigned.ipa
+          shasum -a 256 DSHChat-1.0-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DSHChat-unsigned-ipa
+          path: DSHChat-1.0-unsigned.ipa
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dsh-chat-ipa-${{ github.run_number }}
+          name: DSH Chat unsigned IPA build ${{ github.run_number }}
+          files: DSHChat-1.0-unsigned.ipa
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
