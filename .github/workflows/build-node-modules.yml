@@ -1,0 +1,76 @@
+name: build-dsh-node-modules
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'core | voice | both'
+        required: false
+        default: 'core'
+  push:
+    branches: [dsh-chat-node]
+    paths: ['nodebuild/**', '.github/workflows/build-node-modules.yml']
+
+jobs:
+  core:
+    if: github.event_name == 'push' || inputs.target == 'core' || inputs.target == 'both'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: install
+        working-directory: nodebuild/core
+        run: |
+          npm install --omit=dev --no-audit --no-fund
+      - name: verify
+        working-directory: nodebuild/core
+        run: |
+          node -e "const p=require('./node_modules/@deepseek-ai/dsh/package.json');console.log('DSH_VERSION='+p.version)"
+          npm ls --omit=dev --depth=0 || true
+          echo '--- native modules ---'
+          find node_modules -name '*.node' | head -20 || true
+      - name: pack
+        working-directory: nodebuild/core
+        run: |
+          tar czf dsh-node-modules-core.tgz node_modules package.json package-lock.json
+          ls -lh dsh-node-modules-core.tgz
+          sha256sum dsh-node-modules-core.tgz | tee checksum.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dsh-node-modules-core
+          path: |
+            nodebuild/core/dsh-node-modules-core.tgz
+            nodebuild/core/checksum.txt
+          retention-days: 14
+
+  voice:
+    if: github.event_name == 'workflow_dispatch' && (inputs.target == 'voice' || inputs.target == 'both')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: install
+        working-directory: nodebuild/voice
+        run: |
+          npm install --omit=dev --no-audit --no-fund
+      - name: verify
+        working-directory: nodebuild/voice
+        run: |
+          npm ls --omit=dev --depth=0 || true
+          find node_modules -name '*.node' | head -20 || true
+      - name: pack
+        working-directory: nodebuild/voice
+        run: |
+          tar czf dsh-node-modules-voice.tgz node_modules package.json package-lock.json
+          ls -lh dsh-node-modules-voice.tgz
+          sha256sum dsh-node-modules-voice.tgz | tee checksum.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dsh-node-modules-voice
+          path: |
+            nodebuild/voice/dsh-node-modules-voice.tgz
+            nodebuild/voice/checksum.txt
+          retention-days: 14

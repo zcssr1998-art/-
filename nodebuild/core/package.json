@@ -1,0 +1,8 @@
+{
+  "name": "dsh-nodebuild-core",
+  "private": true,
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.2.1-rc.2",
+    "dsh-web-mobile": "^3.2.1"
+  }
+}

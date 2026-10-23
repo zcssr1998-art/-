@@ -1,0 +1,7 @@
+{
+  "name": "dsh-nodebuild-voice",
+  "private": true,
+  "dependencies": {
+    "dsh-voice-mode": "^0.7.28"
+  }
+}
